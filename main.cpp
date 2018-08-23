@@ -827,8 +827,13 @@
         cout<<"saving ge..."<<endl;
         if(!ge.saveGrupoElite()) exit(1);
         cout<<"fpmax..."<<endl;
-        system("cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/conjunto_elite 10 7 10 ../GRASP/saida_testeblog");
+        char path[100];
+        strcpy(path, "../GRASP/saida_testefb");
+        system("cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/conjunto_elite 10 2 10 ../GRASP/saida_testefb");
         cout<<"end of fpmax"<<endl;
+        list<int> padroes[10];
+        int tam = readSaida(path, padroes);
+        
 
         delete []d;
         delete []k;
@@ -965,7 +970,7 @@
         int n, n2, *T, *C;
         list<int> S;
 
-        int num_inst = 1;
+        int num_inst = 2;
         float meanG, varG;
         int resultG[NUM_REP], minCost;
         char instances_name[][20] = {"CA-GrQc", "Power","Facebook","CA-HepPh.txt", "BlogCatalog","CA-HepTh"};
@@ -973,7 +978,7 @@
         float meanTimeG;
 
         srand (2);
-        while(num_inst==1)
+        while(num_inst==2)
         {
             num_inst++;
             ofstream out;

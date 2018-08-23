@@ -330,7 +330,7 @@ int readSaida(char* ruta, list<int> set[10]){
     f.open(ruta);
     if(f.fail())
     {
-        cerr << "problema ao abrir o arquivo";
+        cerr << "problema ao abrir o arquivo saida";
         exit(1);
     }
     int tam=0;
