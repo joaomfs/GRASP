@@ -686,6 +686,145 @@
 
         return cost;
     }
+        /** a greedy randomized function for generate initials solutions in the graph that receives a partial solucion*/
+    int InitialSolution_aux(const Graph &G, int *C, int *T, list<int> &S, int*d, int*k, list<int> *N, int *process, int &numProcess, int &cost)
+    {
+        int n = G.get_num_vert(), u, v, elemR, caso, pos, random_pos;
+        double fvalue, fmax, fmin;
+        list<int> LC;
+
+        list<int>::iterator itN;
+        int inicio = 0;
+
+        while(numProcess < n)
+        {
+            caso = 3;
+            LC.clear();
+            fmax = -1;
+            fmin = (MAXCOST+2)*n;
+
+            if(inicio == 0)
+            {
+
+                for(v = 0; v < n; v++)
+                {
+                    if(k[v] > 0 && d[v] >= k[v] && process[v] == 0)
+                    {
+                        fvalue = (C[v]*k[v]*1.) / (d[v]*(d[v]+1));
+                        if(fmax < fvalue)
+                            fmax = fvalue;
+                        if(fmin > fvalue)
+                            fmin = fvalue;
+                    }
+                }
+            }
+
+            for(v = inicio; v < n && caso==3; v++)
+            {
+                if(process[v] == 0)
+                {
+                    if(k[v] == 0 )
+                    {
+                        caso = 1;
+                        elemR = v;
+                        inicio = -1;
+                        for(itN = N[v].begin(); itN != N[v].end(); ++itN)
+                        {
+                            u = *itN;
+                            if(k[u] > 0 && process[u] == 0)
+                            {
+                                k[u] = k[u]-1;
+                                if(k[u] == 0)
+                                {
+                                    if(inicio == -1)
+                                        inicio = u;
+                                    else
+                                    {
+                                        if(u < inicio)
+                                            inicio = u;
+                                    }
+
+                                }
+
+                            }
+                        }
+                        if(inicio == -1)
+                            inicio = 0;
+                    }
+                    else
+                    {
+                        if(d[v] < k[v])
+                        {
+                            caso = 2;
+                            elemR = v;
+                            S.push_back(v);
+                            cost += C[v];
+                            inicio = -1;
+
+                            for(itN = N[v].begin(); itN != N[v].end(); ++itN)
+                            {
+                                u = *itN;
+                                if(k[u] > 0 && process[u] == 0)
+                                {
+                                    k[u] = k[u]-1;
+                                    if(k[u] == 0)
+                                    {
+                                        if(inicio == -1)
+                                            inicio = u;
+                                        else
+                                        {
+                                            if(u < inicio)
+                                                inicio = u;
+                                        }
+
+                                    }
+                                }
+                            }
+
+                            if(inicio == -1)
+                                inicio = 0;
+                        }
+
+                        else
+                        {
+                            fvalue = (C[v]*k[v]*1.) / (d[v]*(d[v]+1)) ;
+                            if( fvalue >= fmin + (fmax-fmin)*ALPHA_G )
+                                LC.push_back(v);
+                        }
+                    }
+                }
+
+            }
+
+
+            if(caso == 3)
+            {
+                pos = 0;
+                random_pos = rand()%LC.size();
+
+                while(pos < random_pos)
+                {
+                    LC.pop_front();
+                    pos++;
+                }
+
+                elemR = LC.front();
+                inicio = 0;
+            }
+
+            for(itN = N[elemR].begin(); itN != N[elemR].end(); ++itN)
+            {
+                u = *itN;
+                if(process[u] == 0)
+                    d[u] = d[u] - 1;
+            }
+
+            numProcess++;
+            process[elemR] = 1;
+        }
+
+        return cost;
+    }
 
     /*A local search using the first improvement strategy*/
     int firstBestN(const Graph &G, int *C, int *T, list<int> &S, int cost, int*d, int*k, list<int> *N, int *process)
@@ -732,7 +871,7 @@
             S2.clear();
             cost2 = 0;
 
-             for(itSk = Sk.begin(); itSk != Sk.end(); ++itSk)
+            for(itSk = Sk.begin(); itSk != Sk.end(); ++itSk)
             {
                 v = *itSk;
                 process[v] = 1;
@@ -832,9 +971,56 @@
         system("cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/conjunto_elite 10 2 10 ../GRASP/saida_testefb");
         cout<<"end of fpmax"<<endl;
         list<int> padroes[10];
-        int tam = readSaida(path, padroes);
-        
+        int tam = readSaida(path, padroes); 
+        list<int> Sk;
+        list<int>::iterator itSk,itN;
+        int u, v,numProcess;
 
+        while(numIter < maxIter && timeS < TIME_LIMIT)
+        {
+            numProcess=0, cost=0;
+            Sk = padroes[numIter%tam];
+            numIter++;
+            S2.clear();
+            for(v = 0; v < n; v++)         //U = V(G)
+            {
+                d[v] = G.degree(v);
+                k[v] = T[v];
+                process[v] = 0;
+            }
+
+            for(itSk = Sk.begin(); itSk != Sk.end(); ++itSk)
+            {
+                v = *itSk;
+                process[v] = 1;
+                numProcess++;
+                S2.push_back(v);
+                cost += C[v];
+
+                for(itN = N[v].begin(); itN != N[v].end(); ++itN)
+                {
+                    u = *itN;
+                    if(process[u] == 0)
+                    {
+                        if(k[u] > 0)
+                            k[u] = k[u]-1;
+                        d[u] = d[u] - 1;
+                    }
+
+                }
+            }
+            cost = InitialSolution_aux(G,C,T,S2,d,k,N,process,numProcess, cost);
+            cost = LocalSearch(G,C,T,S2,cost,d,k,N,process);
+
+            if(cost < bestCost)
+            {
+                Sbest = S2;
+                bestCost = cost;
+            }
+
+            timeS = ((double)clock() - (double)tempo) / CLOCKS_PER_SEC;
+
+        }
         delete []d;
         delete []k;
         delete []process;
@@ -1008,7 +1194,7 @@
 
 
             int test = 0;
-            while(test < 1)
+            while(test < 10)
             {
                 test++;
                 minCost = G.get_num_vert()*MAXCOST;
@@ -1119,14 +1305,14 @@
 
                 //out<<minCost<<"\t"<<meanG<<"\t"<<sqrt(varG)<<"\t"<<meanTimeG<<endl;   //for several repetitions
 
-                /*
+                
 
                 bool check = check2(G,C,T,S,cost);  //just in the develop stage
                 if(check == false)
                     cout<<"An error ocurred!!!"<<endl;
                 else
                     cout<<"OK"<<endl;
-                */
+                
             }
 
             out.close();
