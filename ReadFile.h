@@ -337,7 +337,9 @@ int readSaida(char* ruta, list<int> set[10]){
     while(!f.eof())
     {
         f>> n;
-        f.ignore(1,';');f>>cs;f.ignore(1,';');
+        f.ignore(1,';');
+        f>>cs;
+        f.ignore(1,';');
         for(int i=0;i<n;i++){
             f>>j;
             set[tam].push_back(j);
@@ -345,7 +347,7 @@ int readSaida(char* ruta, list<int> set[10]){
         tam++;
     }
     f.close();
-    return tam;
+    return tam-1;
 }
 
 

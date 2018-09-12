@@ -922,7 +922,7 @@
     }
 
     /*The GRASP procedure*/
-    int GRASP(const Graph &G, int *C, int *T, list<int> &S, int maxIter)
+    int GRASP(const Graph &G, int *C, int *T, list<int> &S, int maxIter, char name[20])
     {
         int cost, numIter = 1, bestCost, n = G.get_num_vert();       //Initial Solution
         list<int> Sbest, S2;
@@ -967,11 +967,16 @@
         if(!ge.saveGrupoElite()) exit(1);
         cout<<"fpmax..."<<endl;
         char path[100];
-        strcpy(path, "../GRASP/saida_testefb");
-        system("cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/conjunto_elite 10 2 10 ../GRASP/saida_testefb");
+        strcpy(path, "../GRASP/");
+        strcat(path, name);
+        char cmd[200];
+        strcpy(cmd, "cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/conjunto_elite 10 7 10 ");
+        strcat(cmd, path);
+        system(cmd);
         cout<<"end of fpmax"<<endl;
         list<int> padroes[10];
-        int tam = readSaida(path, padroes); 
+        int tam = readSaida(path, padroes);
+        cout<<tam;
         list<int> Sk;
         list<int>::iterator itSk,itN;
         int u, v,numProcess;
@@ -1034,7 +1039,7 @@
     }
 
     /* function used to check a solution in the develop stage*/
-    bool check2(const Graph &G, int *C, int *T, list<int> &S, int cost)
+    bool check2(const Graph &G, int *C, int *T, list<int> &S, int cost, char name[20])
     {
         int c = 0, n = G.get_num_vert(), u, v, elemR;
         int *d = new int[n], *k = new int[n];
@@ -1156,19 +1161,19 @@
         int n, n2, *T, *C;
         list<int> S;
 
-        int num_inst = 2;
+        int num_inst = 0;
         float meanG, varG;
         int resultG[NUM_REP], minCost;
         char instances_name[][20] = {"CA-GrQc", "Power","Facebook","CA-HepPh.txt", "BlogCatalog","CA-HepTh"};
 
         float meanTimeG;
 
-        srand (2);
-        while(num_inst==2)
+        srand (1);
+        while(num_inst<6)
         {
             num_inst++;
             ofstream out;
-            char dir_result[100] = {"GRASP_"}, num[10];
+            char dir_result[100] = {"1/GRASP_FPMax7_"}, num[10];
             sprintf (num, "%d", num_inst);
             strcat(dir_result,num);
             strcat(dir_result,instances_name[num_inst-1]);
@@ -1237,7 +1242,7 @@
                 inData.close();
 
                 double Time;
-                out<<"GREE_S\tGREE_W\tGREE_T\n";
+                /*out<<"GREE_S\tGREE_W\tGREE_T\n";
                 S.clear();
                 clock_t start = clock();
                 int cost = GREEDY(G,C,T,S);
@@ -1267,18 +1272,22 @@
                 out<<S.size()<<"\t";
                 out<<cost<<"\t";
                 out<<Time<<"\n\n";
-
+                */
                 out<<"GRASP_S\tGRASP_W\tGRASP_T\n";
                 meanG = 0;
                 meanTimeG = 0;
-
+                int cost;
+                //clock_t start;
+                time_t start, end;
+                time(&start);
                 for(int num_rep = 0; num_rep < NUM_REP; num_rep++)
                 {
                 S.clear();
                 start = clock();
-                cost = GRASP(G,C,T,S,MAX_ITERATION);
-                Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
-                
+                cost = GRASP(G,C,T,S,MAX_ITERATION, instances_name[num_inst-1]);
+                time(&end);
+                //Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
+                Time = difftime(end, start);
                 out<<S.size()<<"\t";
                 out<<cost<<"\t";
                 out<<Time<<"\n\n";
@@ -1307,9 +1316,13 @@
 
                 
 
-                bool check = check2(G,C,T,S,cost);  //just in the develop stage
-                if(check == false)
+                bool check = check2(G,C,T,S,cost,instances_name[num_inst-1]);  //just in the develop stage
+                if(check == false){
                     cout<<"An error ocurred!!!"<<endl;
+                    out<<"An error ocurred!!!" <<endl;
+                    out.close();
+                    exit(1);
+                }
                 else
                     cout<<"OK"<<endl;
                 
