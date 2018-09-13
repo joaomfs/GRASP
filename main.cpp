@@ -1283,7 +1283,7 @@
                 for(int num_rep = 0; num_rep < NUM_REP; num_rep++)
                 {
                 S.clear();
-                start = clock();
+                //start = clock();
                 cost = GRASP(G,C,T,S,MAX_ITERATION, instances_name[num_inst-1]);
                 time(&end);
                 //Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
