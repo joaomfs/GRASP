@@ -1293,6 +1293,7 @@
                 S.clear();
                 
                 cost = GRASP(G,C,T,S,MAX_ITERATION, path_testes);
+                //start = clock();
                 time(&end);
                 Time = difftime(end, start);
                 out<<S.size()<<"\t";
