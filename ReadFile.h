@@ -2,6 +2,7 @@
     #define READFILE_H
 
     #include <fstream>
+    #include <iostream>
     #include <list>
     #include <set>
     #include <map>
@@ -348,6 +349,28 @@ int readSaida(char* ruta, list<int> set[10]){
     }
     f.close();
     return tam-1;
+}
+void saveTimes(char ruta[100], double* time_construcao, double* time_buscalocal){
+    ofstream out;
+    char newpath[100];
+    strcpy(newpath, ruta);
+    strcat(newpath, "_TIMES");
+    out.open(newpath);
+
+    out<<"***********CONSTRUÇÃO**************"<<endl;
+    out<< "ANTES | DEPOIS"<<endl;
+    for(int i=0; i<50; i++){
+        out<<time_construcao[i]<< "   "<< time_construcao[i+50]<<endl;
+    }
+
+    out<<"***********BUSCA LOCAL**************"<<endl;
+    out<< "ANTES | DEPOIS"<<endl;
+    for(int i=0; i<50; i++){
+        out<<time_buscalocal[i]<< "   "<< time_buscalocal[i+50]<<endl;
+    }
+
+    out.close();
+
 }
 
 

@@ -29,7 +29,7 @@
     #define ALPHA_G  0.90    //alpha to the Restricted Candidate List
 
     using namespace std;
-
+    int seed;
     typedef struct myPair PAIR;
     struct myPair
     {
@@ -922,36 +922,53 @@
     }
 
     /*The GRASP procedure*/
-    int GRASP(const Graph &G, int *C, int *T, list<int> &S, int maxIter, char name[20])
+    int GRASP(const Graph &G, int *C, int *T, list<int> &S, int maxIter, char name[100])
     {
-        int cost, numIter = 1, bestCost, n = G.get_num_vert();       //Initial Solution
+        int cost, numIter = 0, bestCost, n = G.get_num_vert();       //Initial Solution
         list<int> Sbest, S2;
         int *d = new int[n], *k = new int[n], *process = new int [n];
         list<int> *N = new list<int>[n];
-        double timeS;
-
-
+        double *time_contrucao= new double[100];
+        double *time_buscalocal= new double[100];
+        clock_t start_const, start_buscalocal, end_const, end_buscalocal;
         for(int i = 0; i < n; i++)
             N[i] = G.getList_Adj(i);
-
-        clock_t tempo = clock();
 
         cost = WTSS2(G,C,T,S2);
         cost = LocalSearch(G,C,T,S2,cost,d,k,N,process);
 
         Sbest = S2;
         bestCost = cost;
-
-
-        timeS = ((double)clock() - (double)tempo) / CLOCKS_PER_SEC;
-        GrupoElite ge;
-        while(numIter < maxIter/2 && timeS < TIME_LIMIT)
+                /*MAGIA DOS CAMINHOS*/
+        /*constroi caminho conjunto elite*/
+        char path_ce[100];  //CAMINHO CONJUNTO ELITE
+        strcpy(path_ce, name);
+        strcat(path_ce, "_conjunto_elite");
+        //fim constroi caminho conjunto elite
+        /*constroi caminho padroes*/
+        char path[100];
+        strcpy(path, "../GRASP/");
+        strcat(path, name);
+        char path_info[100];
+        strcpy(path_info, path);
+        GrupoElite ge, pre(50);
+        while(numIter < maxIter/2)
         {
             numIter++;
             S2.clear();
 
+            start_const = clock();
+            
             cost = InitialSolution(G,C,T,S2,d,k,N,process);
+
+            end_const = clock();
+            start_buscalocal = clock();
+
             cost = LocalSearch(G,C,T,S2,cost,d,k,N,process);
+            end_buscalocal = clock();
+
+            time_contrucao[numIter-1]=((double)end_const- (double)start_const)/CLOCKS_PER_SEC;
+            time_buscalocal[numIter-1]= ((double)end_buscalocal- (double)start_buscalocal)/CLOCKS_PER_SEC;
 
             if(cost < bestCost)
             {
@@ -959,34 +976,37 @@
                 bestCost = cost;
             }
 
-            timeS = ((double)clock() - (double)tempo) / CLOCKS_PER_SEC;
             ge.Execute(S2, cost);
+            pre.Execute(S2,cost);
 
         }
-        cout<<"saving ge..."<<endl;
-        if(!ge.saveGrupoElite()) exit(1);
-        cout<<"fpmax..."<<endl;
-        char path[100];
-        strcpy(path, "../GRASP/");
-        strcat(path, name);
+
+        pre.saveAllInfo(path_info, 'a');
+
+        if(!ge.saveGrupoElite(path_ce)) exit(1);
+
+        strcat(path, "_padroes");
+        /*fim constroi caminho padroes e começa constroi cmd*/
         char cmd[200];
-        strcpy(cmd, "cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/conjunto_elite 10 7 10 ");
+        strcpy(cmd, "cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/");
+        strcat(cmd, path_ce);
+        strcat(cmd, " 10 7 10 ");
         strcat(cmd, path);
+        //fim constroi cmd
         system(cmd);
-        cout<<"end of fpmax"<<endl;
         list<int> padroes[10];
         int tam = readSaida(path, padroes);
-        cout<<tam;
         list<int> Sk;
         list<int>::iterator itSk,itN;
         int u, v,numProcess;
-
-        while(numIter < maxIter && timeS < TIME_LIMIT)
+        GrupoElite pos(50);
+        while(numIter < maxIter)
         {
             numProcess=0, cost=0;
             Sk = padroes[numIter%tam];
             numIter++;
             S2.clear();
+            start_const=clock();
             for(v = 0; v < n; v++)         //U = V(G)
             {
                 d[v] = G.degree(v);
@@ -1014,25 +1034,39 @@
 
                 }
             }
+
             cost = InitialSolution_aux(G,C,T,S2,d,k,N,process,numProcess, cost);
+            end_const=clock();
+            start_buscalocal = clock();
             cost = LocalSearch(G,C,T,S2,cost,d,k,N,process);
+            end_buscalocal = clock();
+            time_contrucao[numIter-1]=((double)end_const- (double)start_const)/CLOCKS_PER_SEC;
+            time_buscalocal[numIter-1]= ((double)end_buscalocal- (double)start_buscalocal)/CLOCKS_PER_SEC;
 
             if(cost < bestCost)
             {
                 Sbest = S2;
                 bestCost = cost;
             }
-
-            timeS = ((double)clock() - (double)tempo) / CLOCKS_PER_SEC;
-
+            pos.Execute(S2, cost);
         }
+        pos.saveAllInfo(path_info, 'd');
+
+        saveTimes(path_info, time_contrucao, time_buscalocal);
+
         delete []d;
         delete []k;
         delete []process;
+        delete []time_contrucao;
+        delete []time_buscalocal;
+
 
         for(int i = 0; i < n; i++)  
             N[i].clear();
         delete []N;
+
+        for(int i = 0; i < 10; i++)  
+            padroes[i].clear();
 
         S = Sbest;
         return bestCost;
@@ -1160,7 +1194,7 @@
     {
         int n, n2, *T, *C;
         list<int> S;
-
+        seed = atoi(argv[1]);
         int num_inst = 0;
         float meanG, varG;
         int resultG[NUM_REP], minCost;
@@ -1168,13 +1202,16 @@
 
         float meanTimeG;
 
-        srand (1);
+        srand (seed);
         while(num_inst<6)
         {
             num_inst++;
             ofstream out;
-            char dir_result[100] = {"1/GRASP_FPMax7_"}, num[10];
+            char dir_result[100];
+            sprintf (dir_result, "%d", seed);
+            char dir_prev_result[100] = {"/GRASP_FPMax7_"}, num[10];
             sprintf (num, "%d", num_inst);
+            strcat(dir_result, dir_prev_result);
             strcat(dir_result,num);
             strcat(dir_result,instances_name[num_inst-1]);
 
@@ -1184,7 +1221,7 @@
             out<<"Limit time: "<<TIME_LIMIT<<endl;
             out<<"ALPHA_G: "<<ALPHA_G<<endl;
             out<<"BETA: "<<BETA<<endl<<endl<<endl;
-            out.precision(2);
+            out.precision(3);
 
             Graph G;
             read_instances(num_inst, G);
@@ -1199,11 +1236,14 @@
 
 
             int test = 0;
+            out<<"GRASP_S\tGRASP_W\tGRASP_T\n";
             while(test < 10)
             {
                 test++;
                 minCost = G.get_num_vert()*MAXCOST;
-
+                char path_testes[100];
+                sprintf(path_testes, "%d/%d/", seed,test);
+                strcat(path_testes, instances_name[num_inst-1]);
                 ifstream inData;
                 char path_Data[10] = "Data_", num_path[10], path_Ins[100];
                 sprintf (num_path, "%d", test);
@@ -1242,51 +1282,18 @@
                 inData.close();
 
                 double Time;
-                /*out<<"GREE_S\tGREE_W\tGREE_T\n";
-                S.clear();
-                clock_t start = clock();
-                int cost = GREEDY(G,C,T,S);
-                Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
 
-                out<<S.size()<<"\t";
-                out<<cost<<"\t";
-                out<<Time<<"\n\n";
-
-
-                out<<"WTSS_S\tWTSS_W\tWTSS_T\n";
-                S.clear();
-                start = clock();
-                cost = WTSS(G,C,T,S);
-                Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
-
-                out<<S.size()<<"\t";
-                out<<cost<<"\t";
-                out<<Time<<"\n\n";
-
-                out<<"WTSS2_S\tWTSS2_W\tWTSS2_T\n";
-                S.clear();
-                start = clock();
-                cost = WTSS2(G,C,T,S);
-                Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
-
-                out<<S.size()<<"\t";
-                out<<cost<<"\t";
-                out<<Time<<"\n\n";
-                */
-                out<<"GRASP_S\tGRASP_W\tGRASP_T\n";
                 meanG = 0;
                 meanTimeG = 0;
                 int cost;
-                //clock_t start;
                 time_t start, end;
                 time(&start);
                 for(int num_rep = 0; num_rep < NUM_REP; num_rep++)
                 {
                 S.clear();
-                start = clock();
-                cost = GRASP(G,C,T,S,MAX_ITERATION, instances_name[num_inst-1]);
+                
+                cost = GRASP(G,C,T,S,MAX_ITERATION, path_testes);
                 time(&end);
-                //Time = ((double)clock() - (double)start) / CLOCKS_PER_SEC;
                 Time = difftime(end, start);
                 out<<S.size()<<"\t";
                 out<<cost<<"\t";

@@ -2,7 +2,15 @@
 
 GrupoElite::GrupoElite()
 {
-	n = 0;
+    n = 0;
+    tamMax =10;
+    time(&start);
+}
+GrupoElite::GrupoElite(int tam)
+{
+    n = 0;
+    tamMax =tam;
+    time(&start);
 }
 
 void GrupoElite::addElite(list<int> set, int cost)
@@ -72,7 +80,7 @@ bool GrupoElite::comparaLista(list<int> &L1, list<int> &L2){
 void GrupoElite::Execute(list<int> set, int cost){
     set.sort();
     if(!checkIfExist(set,cost)){
-        if(n<10)
+        if(n<tamMax)
             addElite(set,cost);
         else{
             if(cost<getMaiorValor())
@@ -98,13 +106,13 @@ void GrupoElite::printaGrupoElite(){
     out.close();
 }
 
-int GrupoElite::saveGrupoElite(){
-    if(n<10){
+int GrupoElite::saveGrupoElite(char path[100]){
+    if(n<tamMax){
         cerr<<"conjunto elite menor que 10";
         return 0;
     }
     ofstream out;
-    out.open("conjunto_elite");
+    out.open(path);
     for(int i=0;i<n;i++){
         list<int>::iterator it;
         for(it = grupo[i].set.begin(); it!=grupo[i].set.end();it++){
@@ -114,6 +122,32 @@ int GrupoElite::saveGrupoElite(){
     }
     out.close();
     return 1;
+}
+
+void GrupoElite::saveAllInfo(char path[100], char p){
+    time_t end;
+    time(&end);
+    double time_taken= difftime(end, start);
+    ofstream out;
+    char pp[10], newpath[100];
+    if(p=='a')
+        strcpy(pp, "_pre_");
+    else if(p=='d')
+        strcpy(pp, "_pos_");
+    else
+        strcpy(pp, "deu ruim");
+    strcpy(newpath, path);
+    strcat(newpath, pp);
+    strcat(newpath, "all_info");
+    out.open(newpath);
+    out<<"Tamanho    Peso"<<endl;
+    for(int i=0;i<n;i++){
+        out<<grupo[i].set.size()<< "  ";
+        out<<grupo[i].cost;
+        out<<endl;
+    }
+    out<<endl<<"Time taken: "<< time_taken<<endl;
+    out.close();
 }
 
 GrupoElite& GrupoElite::operator= (const GrupoElite &g)
