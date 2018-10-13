@@ -30,6 +30,7 @@
 
     using namespace std;
     int seed;
+    int iteracoes;
     typedef struct myPair PAIR;
     struct myPair
     {
@@ -1052,7 +1053,7 @@
         }
         pos.saveAllInfo(path_info, 'd');
 
-        saveTimes(path_info, time_contrucao, time_buscalocal);
+        saveTimes(path_info, time_contrucao, time_buscalocal, maxIter);
 
         delete []d;
         delete []k;
@@ -1194,21 +1195,21 @@
     {
         int n, n2, *T, *C;
         list<int> S;
-        seed = atoi(argv[1]);
+        iteracoes = atoi(argv[1]);
         int num_inst = 0;
         float meanG, varG;
         int resultG[NUM_REP], minCost;
-        char instances_name[][20] = {"CA-GrQc", "Power","Facebook","CA-HepPh.txt", "BlogCatalog","CA-HepTh"};
-
+        //char instances_name[][20] = {"CA-GrQc", "Power","Facebook","CA-HepPh.txt", "BlogCatalog","CA-HepTh"};
+        char instances_name[][20] = {"Facebook","BlogCatalog"};
         float meanTimeG;
 
-        srand (seed);
-        while(num_inst<6)
+        srand (1);
+        while(num_inst<2)
         {
             num_inst++;
             ofstream out;
             char dir_result[100];
-            sprintf (dir_result, "%d", seed);
+            sprintf (dir_result, "%d", iteracoes);
             char dir_prev_result[100] = {"/GRASP_FPMax7_"}, num[10];
             sprintf (num, "%d", num_inst);
             strcat(dir_result, dir_prev_result);
@@ -1235,14 +1236,20 @@
             C = new int[n];
 
 
-            int test = 0;
+            //int test = 0;
+
+            int test;
+            if(num_inst==1)
+                test = 5;
+            if(num_inst==2)
+                test = 8;
             out<<"GRASP_S\tGRASP_W\tGRASP_T\n";
-            while(test < 10)
+            while(test==5 || test==8)
             {
                 test++;
                 minCost = G.get_num_vert()*MAXCOST;
                 char path_testes[100];
-                sprintf(path_testes, "%d/%d/", seed,test);
+                sprintf(path_testes, "%d/%d/", iteracoes,test);
                 strcat(path_testes, instances_name[num_inst-1]);
                 ifstream inData;
                 char path_Data[10] = "Data_", num_path[10], path_Ins[100];
@@ -1292,7 +1299,7 @@
                 {
                 S.clear();
                 
-                cost = GRASP(G,C,T,S,MAX_ITERATION, path_testes);
+                cost = GRASP(G,C,T,S,iteracoes, path_testes);
                 //start = clock();
                 time(&end);
                 Time = difftime(end, start);

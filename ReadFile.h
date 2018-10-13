@@ -350,7 +350,7 @@ int readSaida(char* ruta, list<int> set[10]){
     f.close();
     return tam-1;
 }
-void saveTimes(char ruta[100], double* time_construcao, double* time_buscalocal){
+void saveTimes(char ruta[100], double* time_construcao, double* time_buscalocal, int iteracoes){
     ofstream out;
     char newpath[100];
     strcpy(newpath, ruta);
@@ -359,14 +359,14 @@ void saveTimes(char ruta[100], double* time_construcao, double* time_buscalocal)
 
     out<<"***********CONSTRUÇÃO**************"<<endl;
     out<< "ANTES | DEPOIS"<<endl;
-    for(int i=0; i<50; i++){
-        out<<time_construcao[i]<< "   "<< time_construcao[i+50]<<endl;
+    for(int i=0; i<iteracoes/2; i++){
+        out<<time_construcao[i]<< "   "<< time_construcao[i+(iteracoes/2))]<<endl;
     }
 
     out<<"***********BUSCA LOCAL**************"<<endl;
     out<< "ANTES | DEPOIS"<<endl;
-    for(int i=0; i<50; i++){
-        out<<time_buscalocal[i]<< "   "<< time_buscalocal[i+50]<<endl;
+    for(int i=0; i<iteracoes/2; i++){
+        out<<time_buscalocal[i]<< "   "<< time_buscalocal[i+(iteracoes/2)]<<endl;
     }
 
     out.close();
