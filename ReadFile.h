@@ -360,7 +360,7 @@ void saveTimes(char ruta[100], double* time_construcao, double* time_buscalocal,
     out<<"***********CONSTRUÇÃO**************"<<endl;
     out<< "ANTES | DEPOIS"<<endl;
     for(int i=0; i<iteracoes/2; i++){
-        out<<time_construcao[i]<< "   "<< time_construcao[i+(iteracoes/2))]<<endl;
+        out<<time_construcao[i]<< "   "<< time_construcao[i+(iteracoes/2)]<<endl;
     }
 
     out<<"***********BUSCA LOCAL**************"<<endl;
