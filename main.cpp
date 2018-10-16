@@ -929,8 +929,8 @@
         list<int> Sbest, S2;
         int *d = new int[n], *k = new int[n], *process = new int [n];
         list<int> *N = new list<int>[n];
-        double *time_contrucao= new double[100];
-        double *time_buscalocal= new double[100];
+        double *time_contrucao= new double[maxIter];
+        double *time_buscalocal= new double[maxIter];
         clock_t start_const, start_buscalocal, end_const, end_buscalocal;
         for(int i = 0; i < n; i++)
             N[i] = G.getList_Adj(i);
