@@ -1225,7 +1225,11 @@
             out.precision(3);
 
             Graph G;
-            read_instances(num_inst, G);
+            if(num_inst==2)
+                read_instances(5, G);
+            else if(num_inst==1)
+                read_instances(3,G);
+            //read_instances(num_inst,G);
             out<<instances_name[num_inst-1];
             cout<<"Processing "<<instances_name[num_inst-1]<<" ..."<<endl;
             out<<"G: n = "<< G.get_num_vert() <<" , m = "<<G.get_numb_edges()<<endl<<endl;
