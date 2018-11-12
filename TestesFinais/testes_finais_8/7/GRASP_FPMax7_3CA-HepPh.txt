@@ -1,0 +1,11 @@
+
+Number of iterations: 100
+Limit time: 300
+ALPHA_G: 0.9
+BETA: 50
+
+
+CA-HepPh.txtG: n = 12008 , m = 118489
+
+1459	47826	431
+
