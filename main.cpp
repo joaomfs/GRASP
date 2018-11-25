@@ -43,249 +43,6 @@
     };
 
 
-    int GREEDY(const Graph &G, int *C, int *T, list<int> &S)
-    {
-        int cost = 0, n = G.get_num_vert(), u, v, elemR, vmin, caso;
-        int *d = new int[n], *k = new int[n];
-        double fvalue, fmin;
-        list<int> U, *N = new list<int>[n];
-
-        for(v = 0; v < n; v++)         //U = V(G)
-        {
-            U.push_back(v);
-            d[v] = G.degree(v);
-            k[v] = T[v];
-            N[v] = G.getList_Adj(v);
-        }
-
-        list<int>::iterator itU, itN;
-
-        while(!U.empty())
-        {
-            caso = 3;
-
-            vmin = U.front();
-            fmin = MAXCOST*n;
-
-            for(itU = U.begin(); itU != U.end() && caso==3; ++itU)
-            {
-                v = *itU;
-
-                if(k[v] == 0)
-                {
-                    caso = 1;
-                    elemR = v;
-                    for(itN = N[v].begin(); itN != N[v].end(); ++itN)
-                    {
-                        u = *itN;
-                        if(k[u] > 0)
-                            k[u] = k[u]-1;
-                    }
-
-                }
-                else
-                {
-                        if(d[v] < k[v])
-                        {
-                            caso = 2;
-                            elemR = v;
-                            S.push_back(v);
-                            cost += C[v];
-
-                            for(itN = N[v].begin(); itN != N[v].end(); ++itN)
-                            {
-                                u = *itN;
-                                if(k[u] > 0)
-                                    k[u] = k[u]-1;
-                            }
-                        }
-
-                        else
-                        {
-                            fvalue = C[v];      //greedy choose by weight
-                            if(fmin > fvalue)
-                            {
-                                fmin = fvalue;
-                                vmin = v;
-                            }
-                        }
-
-                }
-
-
-            }
-
-            if(caso == 3)
-            {
-                elemR = vmin;
-                S.push_back(elemR);
-                cost += C[elemR];
-
-                for(itN = N[elemR].begin(); itN != N[elemR].end(); ++itN)
-                {
-                    u = *itN;
-                    if(k[u] > 0)
-                        k[u] = k[u]-1;
-                }
-
-            }
-
-            for(itN = N[elemR].begin(); itN != N[elemR].end(); ++itN)
-            {
-                u = *itN;
-                d[u] = d[u] - 1;
-                N[u].remove(elemR);
-            }
-
-            U.remove(elemR);
-        }
-
-        delete []d;
-        delete []k;
-
-        for(int i = 0; i < n; i++)
-            N[i].clear();
-        delete []N;
-
-        return cost;
-    }
-
-    /* the original WTSS heuristic*/
-    int WTSS(const Graph &G, int *C, int *T, list<int> &S)
-    {
-        int cost = 0, n = G.get_num_vert(), u, v, elemR, vmax, caso;
-        int *d = new int[n], *k = new int[n], * process = new int [n];
-        double fvalue, fmax;
-        list<int> *N = new list<int>[n];
-
-        for(v = 0; v < n; v++)
-        {
-            d[v] = G.degree(v);
-            k[v] = T[v];
-            N[v] = G.getList_Adj(v);
-            process[v] = 0;
-        }
-
-        list<int>::iterator itU, itN;
-        int numProcess = 0, inicio = 0;
-
-        while(numProcess < n)
-        {
-            caso = 3;
-
-            vmax = 0;
-            fmax = -1;
-
-            for(v = inicio; v < n && caso==3; v++)
-            {
-                if(process[v] == 0)
-                {
-                    if(k[v] == 0 )
-                    {
-                        caso = 1;
-                        elemR = v;
-                        inicio = -1;
-                        for(itN = N[v].begin(); itN != N[v].end(); ++itN)
-                        {
-                            u = *itN;
-                            if(k[u] > 0 && process[u] == 0)
-                            {
-                                k[u] = k[u]-1;
-                                if(k[u] == 0)
-                                {
-                                    if(inicio == -1)
-                                        inicio = u;
-                                    else
-                                    {
-                                        if(u < inicio)
-                                            inicio = u;
-                                    }
-
-                                }
-
-                            }
-                        }
-                        if(inicio == -1)
-                            inicio = 0;
-                    }
-                    else
-                    {
-                            if(d[v] < k[v])
-                            {
-                                caso = 2;
-                                elemR = v;
-                                S.push_back(v);
-                                cost += C[v];
-                                inicio = -1;
-
-                                for(itN = N[v].begin(); itN != N[v].end(); ++itN)
-                                {
-                                    u = *itN;
-                                    if(k[u] > 0 && process[u] == 0)
-                                    {
-                                        k[u] = k[u]-1;
-                                        if(k[u] == 0)
-                                        {
-                                            if(inicio == -1)
-                                                inicio = u;
-                                            else
-                                            {
-                                                if(u < inicio)
-                                                    inicio = u;
-                                            }
-
-                                        }
-                                    }
-                                }
-
-                                if(inicio == -1)
-                                    inicio = 0;
-                            }
-
-                            else
-                            {
-                                fvalue = (C[v]*k[v]*1.) / (d[v]*(d[v]+1));
-                                if(fmax < fvalue)
-                                {
-                                    fmax = fvalue;
-                                    vmax = v;
-                                }
-                            }
-
-                    }
-                }
-
-
-            }
-
-            if(caso == 3)
-            {
-                elemR = vmax;
-                inicio = 0;
-            }
-
-            for(itN = N[elemR].begin(); itN != N[elemR].end(); ++itN)
-            {
-                u = *itN;
-                if(process[u] == 0)
-                    d[u] = d[u] - 1;
-            }
-
-            numProcess++;
-            process[elemR] = 1;
-        }
-
-        delete []d;
-        delete []k;
-
-        for(int i = 0; i < n; i++)
-            N[i].clear();
-        delete []N;
-
-        return cost;
-    }
-
-
     /* the modified version of the WTSS heuristic*/
     int WTSS2(const Graph &G, int *C, int *T, list<int> &S)
     {
@@ -978,7 +735,7 @@
             }
 
             ge.Execute(S2, cost);
-            pre.Execute(S2,cost);
+            pre.addElite(S2,cost);
 
         }
 
@@ -991,7 +748,7 @@
         char cmd[200];
         strcpy(cmd, "cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/");
         strcat(cmd, path_ce);
-        strcat(cmd, " 10 7 10 ");
+        strcat(cmd, " 10 8 10 ");
         strcat(cmd, path);
         //fim constroi cmd
         system(cmd);
@@ -1049,7 +806,7 @@
                 Sbest = S2;
                 bestCost = cost;
             }
-            pos.Execute(S2, cost);
+            pos.addElite(S2, cost);
         }
         pos.saveAllInfo(path_info, 'd');
 
@@ -1195,25 +952,29 @@
     {
         int n, n2, *T, *C;
         list<int> S;
-        iteracoes = atoi(argv[1]);
-        int num_inst = 0;
+        seed = atoi(argv[1]);
+        int test = atoi(argv[2]);
+        int num_inst = atoi(argv[3]);
+
+        //int num_inst = 0;
         float meanG, varG;
         int resultG[NUM_REP], minCost;
-        //char instances_name[][20] = {"CA-GrQc", "Power","Facebook","CA-HepPh.txt", "BlogCatalog","CA-HepTh"};
-        char instances_name[][20] = {"Facebook","BlogCatalog"};
+        char instances_name[][20] = {"CA-GrQc", "Power","Facebook","CA-HepPh.txt", "BlogCatalog","CA-HepTh"};
         float meanTimeG;
 
-        srand (1);
-        while(num_inst<2)
-        {
-            num_inst++;
+        srand (seed);
+
+        //ERA O WHILE
             ofstream out;
             char dir_result[100];
-            sprintf (dir_result, "%d", iteracoes);
+            sprintf (dir_result, "%d", seed);
+	    strcat(dir_result, "/");
+	    char instancia[2];
+	    sprintf (instancia, "%d", test);
             char dir_prev_result[100] = {"/GRASP_FPMax7_"}, num[10];
             sprintf (num, "%d", num_inst);
             strcat(dir_result, dir_prev_result);
-            strcat(dir_result,num);
+            strcat(dir_result,instancia);
             strcat(dir_result,instances_name[num_inst-1]);
 
             out.open(dir_result);
@@ -1225,11 +986,7 @@
             out.precision(3);
 
             Graph G;
-            if(num_inst==2)
-                read_instances(5, G);
-            else if(num_inst==1)
-                read_instances(3,G);
-            //read_instances(num_inst,G);
+            read_instances(num_inst, G);
             out<<instances_name[num_inst-1];
             cout<<"Processing "<<instances_name[num_inst-1]<<" ..."<<endl;
             out<<"G: n = "<< G.get_num_vert() <<" , m = "<<G.get_numb_edges()<<endl<<endl;
@@ -1241,19 +998,10 @@
 
 
             //int test = 0;
-
-            int test;
-            if(num_inst==1)
-                test = 5;
-            if(num_inst==2)
-                test = 8;
-            out<<"GRASP_S\tGRASP_W\tGRASP_T\n";
-            while(test==5 || test==8)
-            {
-                test++;
+                
                 minCost = G.get_num_vert()*MAXCOST;
                 char path_testes[100];
-                sprintf(path_testes, "%d/%d/", iteracoes,test);
+                sprintf(path_testes, "%d/%d/", seed,test);
                 strcat(path_testes, instances_name[num_inst-1]);
                 ifstream inData;
                 char path_Data[10] = "Data_", num_path[10], path_Ins[100];
@@ -1303,7 +1051,7 @@
                 {
                 S.clear();
                 
-                cost = GRASP(G,C,T,S,iteracoes, path_testes);
+                cost = GRASP(G,C,T,S,MAX_ITERATION, path_testes);
                 //start = clock();
                 time(&end);
                 Time = difftime(end, start);
@@ -1345,13 +1093,12 @@
                 else
                     cout<<"OK"<<endl;
                 
-            }
 
             out.close();
 
             delete []T;
             delete []C;
-        }
+        
 
         return 0;
     }

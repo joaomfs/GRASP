@@ -17,7 +17,7 @@ typedef struct elite Elite;
 
 class GrupoElite
 {
-    Elite grupo[50];
+    Elite grupo[500];
     int n;
     int tamMax;
     time_t start;
