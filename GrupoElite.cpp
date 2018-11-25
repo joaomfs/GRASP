@@ -124,7 +124,7 @@ int GrupoElite::saveGrupoElite(char path[100]){
     return 1;
 }
 
-void GrupoElite::saveAllInfo(char path[100], char p){
+void GrupoElite::saveAllInfo(char path[100], char p, char f){
     time_t end;
     time(&end);
     double time_taken= difftime(end, start);
@@ -136,6 +136,13 @@ void GrupoElite::saveAllInfo(char path[100], char p){
         strcpy(pp, "_pos_");
     else
         strcpy(pp, "deu ruim");
+    if(f=='b')
+        strcat(pp, "_busca_");
+    else if(f=='c')
+        strcat(pp, "_const_");
+    else
+        strcat(pp, "deu ruim");
+
     strcpy(newpath, path);
     strcat(newpath, pp);
     strcat(newpath, "all_info");

@@ -686,9 +686,9 @@
         list<int> Sbest, S2;
         int *d = new int[n], *k = new int[n], *process = new int [n];
         list<int> *N = new list<int>[n];
-        double *time_contrucao= new double[maxIter];
-        double *time_buscalocal= new double[maxIter];
-        clock_t start_const, start_buscalocal, end_const, end_buscalocal;
+        double *time_constr= new double[maxIter];
+        double *time_localSearch= new double[maxIter];
+        clock_t start_const, start_localSearch, end_const, end_localSearch;
         for(int i = 0; i < n; i++)
             N[i] = G.getList_Adj(i);
 
@@ -709,7 +709,7 @@
         strcat(path, name);
         char path_info[100];
         strcpy(path_info, path);
-        GrupoElite ge, pre(50);
+        GrupoElite ge, pre_construcao(50), pre_local_search(50);
         while(numIter < maxIter/2)
         {
             numIter++;
@@ -718,15 +718,16 @@
             start_const = clock();
             
             cost = InitialSolution(G,C,T,S2,d,k,N,process);
+            pre_construcao.addElite(S2, cost);
 
             end_const = clock();
-            start_buscalocal = clock();
+            start_localSearch = clock();
 
             cost = LocalSearch(G,C,T,S2,cost,d,k,N,process);
-            end_buscalocal = clock();
+            end_localSearch = clock();
 
-            time_contrucao[numIter-1]=((double)end_const- (double)start_const)/CLOCKS_PER_SEC;
-            time_buscalocal[numIter-1]= ((double)end_buscalocal- (double)start_buscalocal)/CLOCKS_PER_SEC;
+            time_constr[numIter-1]=((double)end_const- (double)start_const)/CLOCKS_PER_SEC;
+            time_localSearch[numIter-1]= ((double)end_localSearch- (double)start_localSearch)/CLOCKS_PER_SEC;
 
             if(cost < bestCost)
             {
@@ -735,15 +736,16 @@
             }
 
             ge.Execute(S2, cost);
-            pre.addElite(S2,cost);
+            pre_local_search.addElite(S2,cost);
 
         }
 
-        pre.saveAllInfo(path_info, 'a');
+        pre_local_search.saveAllInfo(path_info, 'a', 'b');
+        pre_construcao.saveAllInfo(path_info, 'a', 'c');
 
         if(!ge.saveGrupoElite(path_ce)) exit(1);
 
-        strcat(path, "_padroes");
+        strcat(path, "_patterns");
         /*fim constroi caminho padroes e começa constroi cmd*/
         char cmd[200];
         strcpy(cmd, "cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/");
@@ -752,16 +754,16 @@
         strcat(cmd, path);
         //fim constroi cmd
         system(cmd);
-        list<int> padroes[10];
-        int tam = readSaida(path, padroes);
+        list<int> patterns[10];
+        int tam = readSaida(path, patterns);
         list<int> Sk;
         list<int>::iterator itSk,itN;
         int u, v,numProcess;
-        GrupoElite pos(50);
+        GrupoElite pos_construcao(50), pos_local_search(50);
         while(numIter < maxIter)
         {
             numProcess=0, cost=0;
-            Sk = padroes[numIter%tam];
+            Sk = patterns[numIter%tam];
             numIter++;
             S2.clear();
             start_const=clock();
@@ -794,29 +796,31 @@
             }
 
             cost = InitialSolution_aux(G,C,T,S2,d,k,N,process,numProcess, cost);
+            pos_construcao.addElite(S2,cost);
             end_const=clock();
-            start_buscalocal = clock();
+            start_localSearch = clock();
             cost = LocalSearch(G,C,T,S2,cost,d,k,N,process);
-            end_buscalocal = clock();
-            time_contrucao[numIter-1]=((double)end_const- (double)start_const)/CLOCKS_PER_SEC;
-            time_buscalocal[numIter-1]= ((double)end_buscalocal- (double)start_buscalocal)/CLOCKS_PER_SEC;
+            end_localSearch = clock();
+            time_constr[numIter-1]=((double)end_const- (double)start_const)/CLOCKS_PER_SEC;
+            time_localSearch[numIter-1]= ((double)end_localSearch- (double)start_localSearch)/CLOCKS_PER_SEC;
 
             if(cost < bestCost)
             {
                 Sbest = S2;
                 bestCost = cost;
             }
-            pos.addElite(S2, cost);
+            pos_local_search.addElite(S2, cost);
         }
-        pos.saveAllInfo(path_info, 'd');
+        pos_local_search.saveAllInfo(path_info, 'd', 'b');
+        pos_construcao.saveAllInfo(path_info, 'd', 'c');
 
-        saveTimes(path_info, time_contrucao, time_buscalocal, maxIter);
+        saveTimes(path_info, time_constr, time_localSearch, maxIter);
 
         delete []d;
         delete []k;
         delete []process;
-        delete []time_contrucao;
-        delete []time_buscalocal;
+        delete []time_constr;
+        delete []time_localSearch;
 
 
         for(int i = 0; i < n; i++)  
@@ -824,7 +828,7 @@
         delete []N;
 
         for(int i = 0; i < 10; i++)  
-            padroes[i].clear();
+            patterns[i].clear();
 
         S = Sbest;
         return bestCost;
