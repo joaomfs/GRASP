@@ -35,7 +35,7 @@ public:
   void Execute(list<int> set, int cost);
   void printaGrupoElite();
   int saveGrupoElite(char path[100]);
-  void saveAllInfo(char path[100], char p);
+  void saveAllInfo(char path[100], char p, char f);
 };
 
 #endif // GRUPOELITE_H

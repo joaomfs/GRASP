@@ -750,7 +750,7 @@
         char cmd[200];
         strcpy(cmd, "cd ../FPmax; ./fpmax_hnmp 1 1 ../GRASP/");
         strcat(cmd, path_ce);
-        strcat(cmd, " 10 8 10 ");
+        strcat(cmd, " 10 7 10 ");
         strcat(cmd, path);
         //fim constroi cmd
         system(cmd);
